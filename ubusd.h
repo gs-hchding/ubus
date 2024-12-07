@@ -21,7 +21,9 @@
 #include "ubusd_id.h"
 #include "ubusd_obj.h"
 #include "ubusmsg.h"
+#ifdef ENABLE_UBUSD_ACL
 #include "ubusd_acl.h"
+#endif
 
 #define UBUS_OBJ_HASH_BITS	4
 #define UBUS_CLIENT_MAX_TXQ_LEN	UBUS_MAX_MSGLEN
@@ -79,8 +81,9 @@ struct ubus_path {
 	const char name[];
 };
 
+#ifdef ENABLE_UBUSD_ACL
 extern const char *ubusd_acl_dir;
-
+#endif
 struct ubus_msg_buf *ubus_msg_new(void *data, int len, bool shared);
 void ubus_msg_send(struct ubus_client *cl, struct ubus_msg_buf *ub);
 ssize_t ubus_msg_writev(int fd, struct ubus_msg_buf *ub, size_t offset);
@@ -102,7 +105,9 @@ void ubusd_send_obj_event(struct ubus_object *obj, bool add);
 int ubusd_send_event(struct ubus_client *cl, const char *id,
 		     event_fill_cb fill_cb, void *cb_priv);
 
+#ifdef ENABLE_UBUSD_ACL
 void ubusd_acl_init(void);
+#endif
 
 void ubusd_monitor_init(void);
 void ubusd_monitor_message(struct ubus_client *cl, struct ubus_msg_buf *ub, bool send);

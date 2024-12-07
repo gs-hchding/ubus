@@ -51,7 +51,7 @@ MACRO(ADD_UNIT_TEST_SAN name output_name)
   SET_TARGET_PROPERTIES(${name}-san PROPERTIES OUTPUT_NAME ${output_name})
 ENDMACRO(ADD_UNIT_TEST_SAN)
 
-ADD_LIBRARY(ubusd_library STATIC ubusd.c ubusd_proto.c ubusd_id.c ubusd_obj.c ubusd_event.c ubusd_acl.c ubusd_monitor.c)
+ADD_LIBRARY(ubusd_library STATIC ubusd.c ubusd_proto.c ubusd_id.c ubusd_obj.c ubusd_event.c ubusd_monitor.c)
 ADD_EXECUTABLE(ubusd ubusd_main.c)
 TARGET_LINK_LIBRARIES(ubusd ubusd_library ${ubox_library} ${blob_library} ${json})
 

@@ -90,8 +90,10 @@ static int ubusd_alloc_event_pattern(struct ubus_client *cl, struct blob_attr *m
 		len--;
 	}
 
+#ifdef ENABLE_UBUSD_ACL
 	if (pattern[0] && ubusd_acl_check(cl, pattern, NULL, UBUS_ACL_LISTEN))
 		return UBUS_STATUS_PERMISSION_DENIED;
+#endif
 
 	ev = calloc(1, sizeof(*ev) + len + 1);
 	if (!ev)
@@ -144,8 +146,10 @@ int ubusd_send_event(struct ubus_client *cl, const char *id,
 	struct event_source *ev;
 	int match_len = 0;
 
+#ifdef ENABLE_UBUSD_ACL
 	if (ubusd_acl_check(cl, id, NULL, UBUS_ACL_SEND))
 		return UBUS_STATUS_PERMISSION_DENIED;
+#endif
 
 	obj_event_seq++;
 

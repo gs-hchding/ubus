@@ -175,7 +175,10 @@ static void ubusd_send_obj(struct ubus_client *cl, struct ubus_msg_buf *ub, stru
 	s = blob_nest_start(&b, UBUS_ATTR_SIGNATURE);
 	list_for_each_entry(m, &obj->type->methods, list) {
 		all_cnt++;
-		if (!ubusd_acl_check(cl, obj->path.key, blobmsg_name(m->data), UBUS_ACL_ACCESS)) {
+#ifdef ENABLE_UBUSD_ACL
+		if (!ubusd_acl_check(cl, obj->path.key, blobmsg_name(m->data), UBUS_ACL_ACCESS))
+#endif
+		{
 			blobmsg_add_blob(&b, m->data);
 			cnt++;
 		}
@@ -338,8 +341,10 @@ static int ubusd_handle_invoke(struct ubus_client *cl, struct ubus_msg_buf *ub, 
 
 	method = blob_data(attr[UBUS_ATTR_METHOD]);
 
+#ifdef ENABLE_UBUSD_ACL
 	if (ubusd_acl_check(cl, obj->path.key, method, UBUS_ACL_ACCESS))
 		return UBUS_STATUS_PERMISSION_DENIED;
+#endif
 
 	if (!obj->client)
 		return obj->recv_msg(cl, ub, method, attr[UBUS_ATTR_DATA]);
@@ -460,8 +465,10 @@ static int ubusd_handle_add_watch(struct ubus_client *cl, struct ubus_msg_buf *u
 	if (!target->path.key) {
 		if (strcmp(target->client->user, cl->user) && strcmp(target->client->group, cl->group))
 			return UBUS_STATUS_NOT_FOUND;
+#ifdef ENABLE_UBUSD_ACL
 	} else if (ubusd_acl_check(cl, target->path.key, NULL, UBUS_ACL_SUBSCRIBE)) {
 		return UBUS_STATUS_NOT_FOUND;
+#endif
 	}
 
 	ubus_subscribe(obj, target);
@@ -569,8 +576,10 @@ struct ubus_client *ubusd_proto_new_client(int fd, uloop_fd_handler cb)
 	if (!cl)
 		return NULL;
 
+#ifdef ENABLE_UBUSD_ACL
 	if (ubusd_acl_init_client(cl, fd))
 		goto free;
+#endif
 
 	INIT_LIST_HEAD(&cl->objects);
 	INIT_LIST_HEAD(&cl->cmd_queue);
@@ -608,7 +617,9 @@ void ubusd_proto_free_client(struct ubus_client *cl)
 	ubus_msg_free(cl->retmsg);
 	blob_buf_free(&cl->b);
 
+#ifdef ENABLE_UBUSD_ACL
 	ubusd_acl_free_client(cl);
+#endif
 	ubus_free_id(&clients, &cl->id);
 }
 

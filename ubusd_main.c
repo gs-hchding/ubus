@@ -236,15 +236,19 @@ static int usage(const char *progname)
 {
 	fprintf(stderr, "Usage: %s [<options>]\n"
 		"Options: \n"
+#ifdef ENABLE_UBUSD_ACL
 		"  -A <path>:		Set the path to ACL files\n"
-		"  -s <socket>:		Set the unix domain socket to listen on\n"
+#endif
+		"  -s <socket>:		Set the unix domain socket or <host:port> to listen on\n"
 		"\n", progname);
 	return 1;
 }
 
 static void sighup_handler(int sig)
 {
+#ifdef ENABLE_UBUSD_ACL
 	ubusd_acl_load();
+#endif
 }
 
 static void mkdir_sockdir()
@@ -265,7 +269,8 @@ static void mkdir_sockdir()
 int main(int argc, char **argv)
 {
 	const char *ubus_socket = UBUS_UNIX_SOCKET;
-	int ret = 0;
+	char *host = NULL, *port = NULL;
+	int ret = 0, sock_type = USOCK_UNIX;
 	int ch;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -280,30 +285,44 @@ int main(int argc, char **argv)
 		case 's':
 			ubus_socket = optarg;
 			break;
+#ifdef ENABLE_UBUSD_ACL
 		case 'A':
 			ubusd_acl_dir = optarg;
 			break;
+#endif
 		default:
 			return usage(argv[0]);
 		}
 	}
 
-	mkdir_sockdir();
-	unlink(ubus_socket);
-	umask(0111);
-	server_fd.fd = usock(USOCK_UNIX | USOCK_SERVER | USOCK_NONBLOCK, ubus_socket, NULL);
+	host = strdup(ubus_socket);
+	port = strchr(host, ':');
+	if (port) {
+		sock_type = USOCK_TCP;
+		*port = '\0';
+		port++;
+	} else {
+		mkdir_sockdir();
+		unlink(ubus_socket);
+		umask(0111);
+	}
+
+	server_fd.fd = usock(sock_type | USOCK_SERVER | USOCK_NONBLOCK, host, port);
 	if (server_fd.fd < 0) {
 		perror("usock");
 		ret = -1;
 		goto out;
 	}
 	uloop_fd_add(&server_fd, ULOOP_READ | ULOOP_EDGE_TRIGGER);
+#ifdef ENABLE_UBUSD_ACL
 	ubusd_acl_load();
+#endif
 
 	uloop_run();
 	unlink(ubus_socket);
 
 out:
+	free(host);
 	uloop_done();
 	return ret;
 }

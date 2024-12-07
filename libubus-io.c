@@ -400,9 +400,19 @@ int ubus_reconnect(struct ubus_context *ctx, const char *path)
 	} hdr;
 	struct blob_attr *buf;
 	int ret = UBUS_STATUS_UNKNOWN_ERROR;
+	char *host = NULL, *port = NULL;
+	int sock_type = USOCK_UNIX;
 
 	if (!path)
 		path = UBUS_UNIX_SOCKET;
+
+	host = strdup(path);
+	port = strchr(host, ':');
+	if (port) { // is af_inet socket
+		sock_type = USOCK_TCP;
+		*port = '\0';
+		port++;
+	}
 
 	if (ctx->sock.fd >= 0) {
 		if (ctx->sock.registered)
@@ -413,7 +423,8 @@ int ubus_reconnect(struct ubus_context *ctx, const char *path)
 
 	ctx->sock.eof = false;
 	ctx->sock.error = false;
-	ctx->sock.fd = usock(USOCK_UNIX, path, NULL);
+	ctx->sock.fd = usock(sock_type, host, port);
+	free(host);
 	if (ctx->sock.fd < 0)
 		return UBUS_STATUS_CONNECTION_FAILED;
 

@@ -555,7 +555,7 @@ static int usage(const char *prog)
 	fprintf(stderr,
 		"Usage: %s [<options>] <command> [arguments...]\n"
 		"Options:\n"
-		" -s <socket>:		Set the unix domain socket to connect to\n"
+		" -s <socket>:		Set the unix domain socket or <host:port> to connect to\n"
 		" -t <timeout>:		Set the timeout (in seconds) for a command to complete\n"
 		" -S:			Use simplified output (for scripts)\n"
 		" -v:			More verbose output\n"
